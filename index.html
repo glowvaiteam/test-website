@@ -413,96 +413,68 @@
                   </div>
                   <div class="hero-phone-frame">
                     <div class="hero-screen">
-                     <div id="myRive" data-hero-rive="" data-w-id="c2910e68-a2b8-d31f-43df-91820b53945a" class="hero-phone-island" data-rive-url="" data-rive-state-machine="State Machine 1" data-rive-artboard="Artboard" data-rive-autoplay="true" data-rive-is-touch-scroll-enabled="true" data-rive-automatically-handle-events="false" data-rive-fit="contain" data-rive-alignment="center" data-animation-type="rive">
-<style>
-  .hero-phone-island {
-    position: relative !important;
-    left: 0 !important;
-  }
- .custom-island {
-    position: absolute;
-    top: 5px; /* Pinned directly to the top edge */
-    left: 50%;
-    transform: translateX(-50%);
-    background: #000;
-    border-radius: 0 0 16px 16px; /* Rounded bottom corners like a true notch */
-    width: 120px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    overflow: hidden;
-    z-index: 100;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-  }
-
-                          .island-text-sequence {
-                            position: absolute;
-                            width: 100%;
-                            text-align: center;
-                            opacity: 0;
-                            animation: cycleText 9s infinite;
-                          }
-
-                          .island-text-sequence:nth-child(1) {
-                            animation-delay: 0s;
-                          }
-
-                          .island-text-sequence:nth-child(2) {
-                            animation-delay: 3s;
-                          }
-
-                          .island-text-sequence:nth-child(3) {
-                            animation-delay: 6s;
-                          }
-
-                          @keyframes cycleText {
-
-                            0%,
-                            5% {
-                              opacity: 0;
-                              transform: translateY(10px);
-                            }
-
-                            10%,
-                            25% {
-                              opacity: 1;
-                              transform: translateY(0);
-                            }
-
-                            30%,
-                            100% {
-                              opacity: 0;
-                              transform: translateY(-10px);
-                            }
-                          }
-
-                          .island-badge {
-                            background: #007aff;
-                            color: white;
-                            padding: 2px 6px;
-                            border-radius: 10px;
-                            font-size: 12px;
-                            margin-left: 6px;
-                          }
-                        </style>
-                        <div class="custom-island">
-                          <div class="island-text-sequence">Scanning facial features...</div>
-                          <div class="island-text-sequence">Decoding skin type...</div>
-                          <div class="island-text-sequence">Analyzing skin... <span class="island-badge">100%</span></div>
-                        </div>
-                        <canvas style="height:100%;width:100%"></canvas>
-                      </div>
-                      <div data-is-ix2-target="1" class="hero-phone-screen desktop" data-w-id="487c9c1f-d951-baf1-0baa-b20402adb1d4" data-animation-type="lottie" data-src="./assets/lottie/phone animation1 v2.lottie" data-loop="0" data-direction="1" data-autoplay="0" data-renderer="svg" data-default-duration="0" data-duration="5.7" data-loading="eager"></div>
-                      <div hero-phone-screen="" data-is-ix2-target="1" class="hero-phone-screen mobile" data-w-id="38968780-7eb2-bbe8-08d0-2467ee85d289" data-animation-type="lottie" data-src="./assets/lottie/phone animation1 v4.json" data-loop="0" data-direction="1" data-autoplay="0" data-renderer="svg" data-default-duration="0" data-duration="6.366666666666666" data-loading="eager"></div>
-                      <div class="hero-phone-screen false-p"></div>
-                      <div class="hero-observer"></div>
-                    </div>
-                  </div>
+                   <div id="myRive" data-hero-rive="" data-w-id="c2910e68-a2b8-d31f-43df-91820b53945a" class="hero-phone-island" data-rive-url="" data-rive-state-machine="State Machine 1" data-rive-artboard="Artboard" data-rive-autoplay="true" data-rive-is-touch-scroll-enabled="true" data-rive-automatically-handle-events="false" data-rive-fit="contain" data-rive-alignment="center" data-animation-type="rive">
+  <style>
+    .hero-phone-island {
+      position: absolute !important;
+      top: 0 !important;
+      left: 13% !important;
+      width: 74% !important;
+      height: 100% !important;
+      pointer-events: none;
+    }
+    .custom-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      border-radius: 20px;
+      width: 126px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      overflow: hidden;
+      z-index: 100;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+    }
+    .island-text-sequence {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      opacity: 0;
+      animation: cycleText 9s infinite;
+    }
+    .island-text-sequence:nth-child(1) { animation-delay: 0s; }
+    .island-text-sequence:nth-child(2) { animation-delay: 3s; }
+    .island-text-sequence:nth-child(3) { animation-delay: 6s; }
+    
+    @keyframes cycleText {
+      0%, 5% { opacity: 0; transform: translateY(6px); }
+      10%, 25% { opacity: 1; transform: translateY(0); }
+      30%, 100% { opacity: 0; transform: translateY(-6px); }
+    }
+    .island-badge {
+      background: #007aff;
+      color: white;
+      padding: 1px 4px;
+      border-radius: 8px;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+  </style>
+  <div class="custom-island">
+    <div class="island-text-sequence">Scanning facial features...</div>
+    <div class="island-text-sequence">Decoding skin type...</div>
+    <div class="island-text-sequence">Analyzing skin... <span class="island-badge">100%</span></div>
+  </div>
+  <canvas style="height:100%;width:100%"></canvas>
+</div>
                   <div class="hero-icons">
                     <div class="hero-coins">
                       <div class="hero-coin s1"><img data-levitation="1" loading="lazy" alt="" src="./assets/img/hero-coin-1.png" class="image-contain" /></div>
