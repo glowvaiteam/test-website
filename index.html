@@ -354,22 +354,159 @@
             <div class="w-icon-nav-menu"></div>
           </div>
           <div class="nav-menu-apps--locales">
-            <div class="glow-menu-container">
-  <input type="checkbox" id="glow-toggle" />
-  <label class="glow-menu-button" for="glow-toggle">
-    <span class="menu-label">Menu</span>
-    <nav class="glow-dropdown-nav">
-      <ul>
-        <li><a href="#scan">AI Scan (Web Version)</a></li>
-        <li><a href="#sell">Vendor Registration</a></li>
-        <li><a href="#advertise">Advertise</a></li>
-        <li><a href="#blog">Blog</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-    </nav>
-  </label>
+         <div class="glow-menu-wrapper">
+  <div class="menu-trigger" onclick="toggleGlowMenu()">
+    <div class="menu-icon"></div>
+  </div>
+  <nav id="glowNavDropdown" class="nav-dropdown">
+    <ul>
+      <li><a href="#scan">Scan your face (Web Version)</a></li>
+      <li><a href="#sell">sell on glowvai</a></li>
+      <li><a href="#advertise">Advertise on glowvai</a></li>
+      <li><a href="#blog">Blog</a></li>
+      <li><a href="#about">About us</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
 </div>
+
+<style>
+.glow-menu-wrapper {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  z-index: 9999;
+}
+
+.menu-trigger {
+  position: relative;
+  z-index: 1000;
+  width: 55px;
+  height: 50px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Plus icon bars */
+.menu-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+
+.menu-icon:before, .menu-icon:after {
+  position: absolute;
+  content: "";
+  background: #eeff00;
+  transition: transform 0.4s ease;
+}
+
+.menu-icon:before {
+  top: 9px;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  transform: rotate(0deg);
+}
+
+.menu-icon:after {
+  top: 0;
+  left: 9px;
+  width: 2px;
+  height: 20px;
+  transform: rotate(0deg);
+}
+
+.nav-dropdown {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease-in-out;
+  background: #1a1a1a;
+  width: 240px;
+  border-radius: 12px;
+  padding: 15px 10px;
+  position: absolute;
+  top: 60px;
+  right: 0;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.nav-dropdown ul {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-dropdown li {
+  list-style: none;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.nav-dropdown a {
+  transition: all 0.2s linear;
+  text-decoration: none;
+  color: #eeff00;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.nav-dropdown a:hover {
+  color: #fff;
+  background: #2c2c2c;
+}
+
+/* Active Open State */
+.glow-menu-wrapper.active .nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.glow-menu-wrapper.active .nav-dropdown li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger list animation delays */
+.glow-menu-wrapper.active .nav-dropdown li:nth-child(1) { transition-delay: 50ms; }
+.glow-menu-wrapper.active .nav-dropdown li:nth-child(2) { transition-delay: 100ms; }
+.glow-menu-wrapper.active .nav-dropdown li:nth-child(3) { transition-delay: 150ms; }
+.glow-menu-wrapper.active .nav-dropdown li:nth-child(4) { transition-delay: 200ms; }
+.glow-menu-wrapper.active .nav-dropdown li:nth-child(5) { transition-delay: 250ms; }
+.glow-menu-wrapper.active .nav-dropdown li:nth-child(6) { transition-delay: 300ms; }
+
+/* Rotate plus into X */
+.glow-menu-wrapper.active .menu-icon:before {
+  transform: rotate(45deg);
+}
+
+.glow-menu-wrapper.active .menu-icon:after {
+  transform: rotate(135deg);
+}
+</style>
+
+<script>
+function toggleGlowMenu() {
+  const wrapper = document.querySelector('.glow-menu-wrapper');
+  wrapper.classList.toggle('active');
+}
+</script>
             </div>
             <div class="nav-apps">
               <div class="nav-app-link-stroke"><a href="#" class="nav-app-link w-inline-block">
