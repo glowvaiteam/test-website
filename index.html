@@ -633,6 +633,7 @@
         </div>
       </section>
       <!-- BENEFITS SECTION -->
+<!-- BENEFITS SECTION -->
 <section class="benefits-sc">
   <div class="benefits-subheight">
     <div id="heroGrid" data-w-id="07ee1491-c4ff-2c64-8f90-dd77b0d3ff0c" class="benefits-height">
@@ -687,6 +688,93 @@
           <div class="benefits-cards-bg"></div>
         </div>
       </div>
+
+      <!-- 3D GRID TUNNEL EMBED (Restored properly behind the cards section) -->
+      <div class="hero-grid-embed w-embed w-script">
+        <style>
+          #tunnel {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+          }
+        </style>
+        <div id="tunnel"></div>
+        <script>
+          if (typeof THREE !== 'undefined' && typeof gsap !== 'undefined') {
+            const tunnelSettings = { depth: 100, divisions: 100, wallOffsetX: 5, gridColor: 0xffffff, gridOpacity: 0.8, speed: 0.01 };
+            const tunnelScene = new THREE.Scene();
+            const tunnelCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+            const tunnelRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            tunnelRenderer.setSize(window.innerWidth, window.innerHeight);
+            tunnelRenderer.setClearColor(0x000000, 0);
+            const tunnelContainer = document.getElementById("tunnel");
+            if (tunnelContainer) tunnelContainer.appendChild(tunnelRenderer.domElement);
+            tunnelCamera.position.z = 0;
+
+            function getTunnelVisibleHeightAtDepth(depth) {
+              const vFOV = THREE.MathUtils.degToRad(tunnelCamera.fov);
+              const dist = Math.abs(depth - tunnelCamera.position.z);
+              return 2 * Math.tan(vFOV / 2) * dist;
+            }
+
+            function createTunnelWall(xPos) {
+              const visibleHeight = getTunnelVisibleHeightAtDepth(-tunnelSettings.depth / 2);
+              const grid = new THREE.GridHelper(tunnelSettings.depth, tunnelSettings.divisions, tunnelSettings.gridColor, tunnelSettings.gridColor);
+              grid.material.opacity = tunnelSettings.gridOpacity;
+              grid.material.transparent = true;
+              grid.rotation.z = Math.PI / 2;
+              grid.rotation.y = xPos < 0 ? 0 : Math.PI;
+              grid.position.x = xPos;
+              grid.scale.y = visibleHeight / tunnelSettings.depth;
+              return grid;
+            }
+
+            const leftTunnelWall = createTunnelWall(-tunnelSettings.wallOffsetX);
+            const rightTunnelWall = createTunnelWall(tunnelSettings.wallOffsetX);
+            tunnelScene.add(leftTunnelWall, rightTunnelWall);
+
+            function animateTunnel() {
+              requestAnimationFrame(animateTunnel);
+              tunnelScene.children.forEach(obj => {
+                obj.position.z += tunnelSettings.speed;
+                if (obj.position.z > 1) obj.position.z = 0;
+              });
+              tunnelRenderer.render(tunnelScene, tunnelCamera);
+            }
+            animateTunnel();
+
+            window.addEventListener("resize", () => {
+              tunnelCamera.aspect = window.innerWidth / window.innerHeight;
+              tunnelCamera.updateProjectionMatrix();
+              tunnelRenderer.setSize(window.innerWidth, window.innerHeight);
+              const newHeight = getTunnelVisibleHeightAtDepth(-tunnelSettings.depth / 2);
+              [leftTunnelWall, rightTunnelWall].forEach(grid => {
+                grid.scale.y = newHeight / tunnelSettings.depth;
+              });
+              ScrollTrigger.refresh();
+            });
+
+            const heroTunnel = document.querySelector("#heroGrid");
+            if (heroTunnel) {
+              const tunnelScrollOffset = getTunnelVisibleHeightAtDepth(-tunnelSettings.depth / 2);
+              gsap.to([leftTunnelWall.position, rightTunnelWall.position], {
+                y: tunnelScrollOffset,
+                scrollTrigger: {
+                  trigger: heroTunnel,
+                  start: () => `top+=${heroTunnel.offsetHeight * 0} top`,
+                  end: () => `top+=${heroTunnel.offsetHeight * 2.5} top`,
+                  scrub: true
+                }
+              });
+            }
+          }
+        </script>
+      </div>
+
     </div>
   </div>
 </section>
