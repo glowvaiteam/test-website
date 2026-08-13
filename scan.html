@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
   
   <style>
-    /* Clean, minimal, high-contrast aesthetic */
+    /* Clean, minimal, high-contrast Apple-inspired aesthetic */
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -46,10 +46,11 @@
       background: #000;
       margin-bottom: 24px;
       aspect-ratio: 3/4;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
     }
     
     video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { display: none; width: 100%; height: 100%; object-fit: cover; } /* Updated Canvas */
+    canvas { display: none; width: 100%; height: 100%; object-fit: cover; }
 
     /* Form Elements */
     input[type="text"], input[type="tel"] {
@@ -62,9 +63,12 @@
       font-size: 15px;
       box-sizing: border-box;
       outline: none;
-      transition: border 0.2s;
+      transition: border 0.2s, box-shadow 0.2s;
     }
-    input[type="text"]:focus, input[type="tel"]:focus { border-color: #111; }
+    input[type="text"]:focus, input[type="tel"]:focus { 
+      border-color: #111; 
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+    }
 
     /* Fix for intl-tel-input width */
     .iti { width: 100%; margin-bottom: 16px; text-align: left; }
@@ -77,6 +81,7 @@
       font-size: 12px;
       color: #666;
       margin-bottom: 24px;
+      line-height: 1.4;
     }
     .consent-wrapper input { margin-right: 10px; margin-top: 2px; }
 
@@ -98,7 +103,7 @@
     #loading-state { display: none; margin-top: 20px; font-weight: 500; color: #111; }
     
     /* Error message for phone validation */
-    #phone-error { color: #d93025; font-size: 12px; display: none; margin-top: -10px; margin-bottom: 16px; text-align: left; }
+    #phone-error { color: #d93025; font-size: 12px; display: none; margin-top: -10px; margin-bottom: 16px; text-align: left; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -142,7 +147,7 @@
     const phoneInput = document.getElementById('scan-phone');
     const phoneError = document.getElementById('phone-error');
     
-    // Your verified Apps Script URL
+    // Verified Apps Script URL
     const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmEqNgAk5cPP2n5kRNd83UrAhGThXwXFsk17bhtCG8HVl2ngQSROlxdJGUchEVwRVfBw/exec";
 
     // 1. Initialize International Phone Input
@@ -152,7 +157,7 @@
         fetch("https://ipapi.co/json")
           .then(function(res) { return res.json(); })
           .then(function(data) { success(data.country_code); })
-          .catch(function() { success("in"); }); // Fallback to India if adblocker is on
+          .catch(function() { success("in"); });
       },
       utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
     });
@@ -201,7 +206,7 @@
     scanForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      // Enforce strict phone validation before doing anything else
+      // Enforce strict phone validation
       if (!iti.isValidNumber()) {
         phoneError.style.display = "block";
         phoneInput.style.borderColor = "#d93025";
@@ -210,38 +215,39 @@
       
       // Reset errors if valid
       phoneError.style.display = "none";
-      phoneInput.style.borderColor = "#ddd";
+      phoneInput.style.borderColor = "#111";
       
       scanBtn.style.display = 'none';
       scanForm.style.display = 'none';
       loadingState.style.display = 'block';
 
-      // Capture Image from Video and show the frozen canvas (prevents black screen)
+      // Capture Image & Freeze Frame
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // THIS IS THE CRITICAL LINE THAT SAVES THE IMAGE DATA
       const base64Image = canvas.toDataURL('image/jpeg', 0.8);
       
-      // Hide video, show captured picture
       video.style.display = 'none';
       canvas.style.display = 'block';
 
       // Get Location
       const location = await getHybridLocation();
 
-      // Prepare Data Payload using the perfectly formatted international number
+      // Prepare Data Payload
       const data = {
         type: "web_scan",
         name: document.getElementById('scan-name').value,
-        phone: iti.getNumber(), // Gets the full +country code format
+        phone: iti.getNumber(),
         location: location,
-        imageBase64: base64Image, 
+        imageBase64: base64Image, // THIS TELLS THE SCRIPT TO SEND TO GOOGLE DRIVE
         diagnosticResult: "Pending CNN Analysis", 
         consent: document.getElementById('scan-consent').checked
       };
 
-      // Send to Google Sheets/Drive
+      // Send to Google Sheets and Drive via Apps Script
       try {
         await fetch(APP_SCRIPT_URL, {
           method: 'POST',
@@ -250,7 +256,7 @@
           body: JSON.stringify(data)
         });
         
-        // Stop Camera tracks safely now that the canvas is displaying the frozen image
+        // Safely stop camera hardware
         video.srcObject.getTracks().forEach(track => track.stop());
         
         loadingState.innerText = "Data securely saved! (Next phase: Redirecting to results...)";
