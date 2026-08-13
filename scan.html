@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan Your Face - Glowvai</title>
+  
+  <!-- CSS for International Phone Input -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+  
   <style>
     /* Clean, minimal, high-contrast aesthetic */
     body {
@@ -45,7 +49,7 @@
     }
     
     video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { display: none; } /* Hidden, used for capturing the image */
+    canvas { display: none; width: 100%; height: 100%; object-fit: cover; } /* Updated Canvas */
 
     /* Form Elements */
     input[type="text"], input[type="tel"] {
@@ -61,6 +65,10 @@
       transition: border 0.2s;
     }
     input[type="text"]:focus, input[type="tel"]:focus { border-color: #111; }
+
+    /* Fix for intl-tel-input width */
+    .iti { width: 100%; margin-bottom: 16px; text-align: left; }
+    .iti__input { width: 100% !important; margin-bottom: 0 !important; }
 
     .consent-wrapper {
       display: flex;
@@ -87,7 +95,10 @@
     .primary-btn:active { transform: scale(0.98); }
     .primary-btn:disabled { background: #ccc; cursor: not-allowed; }
 
-    #loading-state { display: none; margin-top: 20px; font-weight: 500; }
+    #loading-state { display: none; margin-top: 20px; font-weight: 500; color: #111; }
+    
+    /* Error message for phone validation */
+    #phone-error { color: #d93025; font-size: 12px; display: none; margin-top: -10px; margin-bottom: 16px; text-align: left; }
   </style>
 </head>
 <body>
@@ -103,7 +114,10 @@
 
     <form id="scan-form">
       <input type="text" id="scan-name" placeholder="Full Name" required>
-      <input type="tel" id="scan-phone" placeholder="Phone Number" required>
+      
+      <!-- Phone Input with Intl-Tel-Input -->
+      <input type="tel" id="scan-phone" required>
+      <div id="phone-error">Please enter a valid phone number.</div>
       
       <div class="consent-wrapper">
         <input type="checkbox" id="scan-consent" required>
@@ -116,17 +130,34 @@
     <div id="loading-state">Scanning facial features & Decoding skin type...</div>
   </div>
 
+  <!-- JS for International Phone Input -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
   <script>
     const video = document.getElementById('camera-stream');
     const canvas = document.getElementById('capture-canvas');
     const scanForm = document.getElementById('scan-form');
     const scanBtn = document.getElementById('scan-btn');
     const loadingState = document.getElementById('loading-state');
+    const phoneInput = document.getElementById('scan-phone');
+    const phoneError = document.getElementById('phone-error');
     
-    // The Apps Script URL you just generated
+    // Your verified Apps Script URL
     const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmEqNgAk5cPP2n5kRNd83UrAhGThXwXFsk17bhtCG8HVl2ngQSROlxdJGUchEVwRVfBw/exec";
 
-    // 1. Initialize Camera
+    // 1. Initialize International Phone Input
+    const iti = window.intlTelInput(phoneInput, {
+      initialCountry: "auto",
+      geoIpLookup: function(success, failure) {
+        fetch("https://ipapi.co/json")
+          .then(function(res) { return res.json(); })
+          .then(function(data) { success(data.country_code); })
+          .catch(function() { success("in"); }); // Fallback to India if adblocker is on
+      },
+      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+    });
+
+    // 2. Initialize Camera
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -138,7 +169,7 @@
     }
     startCamera();
 
-    // 2. Hybrid Location Fetcher (GPS First, IP Fallback)
+    // 3. Hybrid Location Fetcher (GPS First, IP Fallback)
     async function getIPLocationFallback() {
       try {
         const response = await fetch('https://ipapi.co/json/');
@@ -151,58 +182,66 @@
 
     async function getHybridLocation() {
       return new Promise((resolve) => {
-        // Step 1: Try Exact GPS (Triggers Popup)
         if ("geolocation" in navigator) {
           navigator.geolocation.getCurrentPosition(
-            (position) => {
-              // Success: User allowed GPS
-              resolve(`${position.coords.latitude}, ${position.coords.longitude} (Exact GPS)`);
-            },
+            (position) => { resolve(`${position.coords.latitude}, ${position.coords.longitude} (Exact GPS)`); },
             async (error) => {
-              // Failed: User blocked it or connection timed out
-              console.log("GPS denied or failed. Falling back to IP...");
               const ipFallback = await getIPLocationFallback();
               resolve(ipFallback);
             },
-            { timeout: 5000, enableHighAccuracy: true } // Waits max 5 seconds before fallback
+            { timeout: 5000, enableHighAccuracy: true } 
           );
         } else {
-          // Browser doesn't support GPS
           getIPLocationFallback().then(resolve);
         }
       });
     }
 
-    // 3. Handle Scan Submission
+    // 4. Handle Scan Submission
     scanForm.addEventListener('submit', async function(e) {
       e.preventDefault();
+      
+      // Enforce strict phone validation before doing anything else
+      if (!iti.isValidNumber()) {
+        phoneError.style.display = "block";
+        phoneInput.style.borderColor = "#d93025";
+        return; 
+      }
+      
+      // Reset errors if valid
+      phoneError.style.display = "none";
+      phoneInput.style.borderColor = "#ddd";
       
       scanBtn.style.display = 'none';
       scanForm.style.display = 'none';
       loadingState.style.display = 'block';
 
-      // Capture Image from Video
+      // Capture Image from Video and show the frozen canvas (prevents black screen)
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+      
+      // Hide video, show captured picture
+      video.style.display = 'none';
+      canvas.style.display = 'block';
 
-      // Get Hybrid Location (Triggers GPS popup here, falls back to IP if denied)
+      // Get Location
       const location = await getHybridLocation();
 
-      // Prepare Data Payload
+      // Prepare Data Payload using the perfectly formatted international number
       const data = {
         type: "web_scan",
         name: document.getElementById('scan-name').value,
-        phone: document.getElementById('scan-phone').value,
+        phone: iti.getNumber(), // Gets the full +country code format
         location: location,
-        imageUrl: "Pending Upload", // We will link Firebase in the next step
-        diagnosticResult: "Pending CNN Analysis", // We will link Python CNN in the next step
+        imageBase64: base64Image, 
+        diagnosticResult: "Pending CNN Analysis", 
         consent: document.getElementById('scan-consent').checked
       };
 
-      // Send to Google Sheets Waitlist/Database
+      // Send to Google Sheets/Drive
       try {
         await fetch(APP_SCRIPT_URL, {
           method: 'POST',
@@ -211,7 +250,7 @@
           body: JSON.stringify(data)
         });
         
-        // Stop Camera
+        // Stop Camera tracks safely now that the canvas is displaying the frozen image
         video.srcObject.getTracks().forEach(track => track.stop());
         
         loadingState.innerText = "Data securely saved! (Next phase: Redirecting to results...)";
