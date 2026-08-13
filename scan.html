@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan Your Face - Glowvai</title>
+  <style>
+    /* Clean, minimal, high-contrast aesthetic */
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    .scan-container {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 24px;
+      padding: 40px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h2 { margin-top: 0; font-weight: 600; letter-spacing: -0.5px; }
+    p { color: #555; font-size: 14px; margin-bottom: 24px; }
+
+    /* Camera Viewfinder */
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 24px;
+      aspect-ratio: 3/4;
+    }
+    
+    video { width: 100%; height: 100%; object-fit: cover; }
+    canvas { display: none; } /* Hidden, used for capturing the image */
+
+    /* Form Elements */
+    input[type="text"], input[type="tel"] {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 15px;
+      box-sizing: border-box;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus, input[type="tel"]:focus { border-color: #111; }
+
+    .consent-wrapper {
+      display: flex;
+      align-items: flex-start;
+      text-align: left;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+    .consent-wrapper input { margin-right: 10px; margin-top: 2px; }
+
+    .primary-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      background: #111;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+    .primary-btn:active { transform: scale(0.98); }
+    .primary-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    #loading-state { display: none; margin-top: 20px; font-weight: 500; }
+  </style>
+</head>
+<body>
+
+  <div class="scan-container">
+    <h2>Skin Analysis</h2>
+    <p>Center your face in the frame with good lighting.</p>
+
+    <div class="video-wrapper">
+      <video id="camera-stream" autoplay playsinline></video>
+      <canvas id="capture-canvas"></canvas>
+    </div>
+
+    <form id="scan-form">
+      <input type="text" id="scan-name" placeholder="Full Name" required>
+      <input type="tel" id="scan-phone" placeholder="Phone Number" required>
+      
+      <div class="consent-wrapper">
+        <input type="checkbox" id="scan-consent" required>
+        <label for="scan-consent">I consent to Glowvai analyzing my facial features to generate a customized diagnostic skin report.</label>
+      </div>
+
+      <button type="submit" id="scan-btn" class="primary-btn">Analyze My Skin</button>
+    </form>
+
+    <div id="loading-state">Scanning facial features & Decoding skin type...</div>
+  </div>
+
+  <script>
+    const video = document.getElementById('camera-stream');
+    const canvas = document.getElementById('capture-canvas');
+    const scanForm = document.getElementById('scan-form');
+    const scanBtn = document.getElementById('scan-btn');
+    const loadingState = document.getElementById('loading-state');
+    
+    // The Apps Script URL you just generated
+    const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmEqNgAk5cPP2n5kRNd83UrAhGThXwXFsk17bhtCG8HVl2ngQSROlxdJGUchEVwRVfBw/exec";
+
+    // 1. Initialize Camera
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+      } catch (err) {
+        alert("Camera access is required for the analysis.");
+        console.error("Camera Error:", err);
+      }
+    }
+    startCamera();
+
+    // 2. Fetch IP Location Silently
+    async function getIPLocation() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        return `${data.city}, ${data.region}`; 
+      } catch (error) {
+        return "Location unavailable";
+      }
+    }
+
+    // 3. Handle Scan Submission
+    scanForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      scanBtn.style.display = 'none';
+      scanForm.style.display = 'none';
+      loadingState.style.display = 'block';
+
+      // Capture Image from Video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+      // Get Location
+      const location = await getIPLocation();
+
+      // Prepare Data Payload
+      const data = {
+        type: "web_scan",
+        name: document.getElementById('scan-name').value,
+        phone: document.getElementById('scan-phone').value,
+        location: location,
+        imageUrl: "Pending Upload", // We will link Firebase in the next step
+        diagnosticResult: "Pending CNN Analysis", // We will link Python CNN in the next step
+        consent: document.getElementById('scan-consent').checked
+      };
+
+      // Send to Google Sheets Waitlist/Database
+      try {
+        await fetch(APP_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        // Stop Camera
+        video.srcObject.getTracks().forEach(track => track.stop());
+        
+        loadingState.innerText = "Data securely saved! (Next phase: Redirecting to results...)";
+      } catch (err) {
+        alert("Error saving data. Please try again.");
+        scanBtn.style.display = 'block';
+        loadingState.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
