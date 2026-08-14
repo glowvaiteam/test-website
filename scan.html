@@ -72,7 +72,7 @@
       margin-bottom: 24px;
       aspect-ratio: 3/4;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
-      transform: translateZ(0); /* Hardware acceleration */
+      transform: translateZ(0); 
     }
     
     video, canvas { 
@@ -297,13 +297,41 @@
       return "passed";
     }
 
-    // 5. Update UI Status dynamically
+    // 5. Hybrid Location Fetchers
+    async function getIPLocationFallback() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        return `${data.city}, ${data.region} (IP Fallback)`; 
+      } catch (error) {
+        return "Location unavailable";
+      }
+    }
+
+    async function getHybridLocation() {
+      return new Promise((resolve) => {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => { resolve(`${position.coords.latitude}, ${position.coords.longitude} (Exact GPS)`); },
+            async (error) => {
+              const ipFallback = await getIPLocationFallback();
+              resolve(ipFallback);
+            },
+            { timeout: 5000, enableHighAccuracy: true } 
+          );
+        } else {
+          getIPLocationFallback().then(resolve);
+        }
+      });
+    }
+
+    // 6. Update UI Status dynamically
     function updateStatus(main, sub) {
       statusText.innerText = main;
       statusSubtext.innerText = sub;
     }
 
-    // 6. Form Submission & Processing Pipeline
+    // 7. Form Submission & Processing Pipeline
     scanForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       hideAlert();
@@ -316,8 +344,8 @@
       // UI Transition to Scanning Mode
       scanForm.style.display = 'none';
       statusContainer.style.display = 'block';
-      laser.style.display = 'block'; // Start laser animation
-      updateStatus("Processing image...", "Validating frame quality");
+      laser.style.display = 'block'; 
+      updateStatus("Processing image...", "Requesting secure location & validating frame");
 
       // Capture frame
       canvas.width = video.videoWidth || 640;
@@ -328,7 +356,6 @@
       // Verify image isn't blank/dark
       const qualityCheck = validateImageQuality(context, canvas.width, canvas.height);
       if (qualityCheck !== "passed") {
-        // Reset UI on failure
         statusContainer.style.display = 'none';
         scanForm.style.display = 'block';
         laser.style.display = 'none';
@@ -341,9 +368,15 @@
       video.style.display = 'none';
       canvas.style.display = 'block';
 
+      // Fetch user location
+      const userLocation = await getHybridLocation();
+
+      // Final Payload with correct routing flag
       const payload = {
+        type: "web_scan", // Routes directly to Web_Scans tab in Apps Script
         name: document.getElementById('scan-name').value,
         phone: iti.getNumber(),
+        location: userLocation,
         imageBase64: base64Image
       };
 
@@ -367,7 +400,6 @@
         });
 
         if (!aiResponse.ok) {
-          // Check if backend specifically rejected due to glasses/mask
           const errorData = await aiResponse.json().catch(() => ({}));
           if (errorData.detail && errorData.detail.includes("glasses")) {
             throw new Error("Glasses detected. Please remove them and try again.");
@@ -386,7 +418,6 @@
         updateStatus("Analysis Complete!", "Redirecting to your diagnostic report...");
         laser.style.display = 'none';
         
-        // Pass the generated report ID to the results page
         setTimeout(() => {
           window.location.href = `results.html?id=${resultData.report_id || 'latest'}`;
         }, 1200);
