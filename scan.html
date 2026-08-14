@@ -9,68 +9,119 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
   
   <style>
-    /* Clean, minimal, high-contrast Apple-inspired aesthetic */
+    /* Clean, Apple-inspired minimal glassmorphic aesthetic */
+    :root {
+      --bg-color: #f5f5f7;
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --text-main: #1d1d1f;
+      --text-muted: #86868b;
+      --accent: #0071e3;
+      --danger: #ff3b30;
+      --success: #34c759;
+    }
+
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f9f9f9;
-      color: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
     }
     
     .scan-container {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      border-radius: 24px;
-      padding: 40px;
-      width: 90%;
-      max-width: 500px;
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 28px;
+      padding: 40px 30px;
+      width: 100%;
+      max-width: 420px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
 
-    h2 { margin-top: 0; font-weight: 600; letter-spacing: -0.5px; }
-    p { color: #555; font-size: 14px; margin-bottom: 24px; }
+    h2 { 
+      margin: 0 0 8px 0; 
+      font-weight: 700; 
+      font-size: 24px;
+      letter-spacing: -0.5px; 
+    }
+    
+    p { 
+      color: var(--text-muted); 
+      font-size: 14px; 
+      margin: 0 0 24px 0; 
+      line-height: 1.4;
+    }
 
-    /* Camera Viewfinder */
+    /* Camera Viewfinder & Scanning Animation */
     .video-wrapper {
       position: relative;
       width: 100%;
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
       background: #000;
       margin-bottom: 24px;
       aspect-ratio: 3/4;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
+      transform: translateZ(0); /* Hardware acceleration */
     }
     
-    video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { display: none; width: 100%; height: 100%; object-fit: cover; }
+    video, canvas { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      display: block;
+    }
+    canvas { display: none; }
+
+    /* The Scanning Laser Effect */
+    .scanner-laser {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 15px 4px rgba(255, 255, 255, 0.5);
+      display: none;
+      z-index: 10;
+      animation: scan-animation 2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+    }
+
+    @keyframes scan-animation {
+      0% { top: 5%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 95%; opacity: 0; }
+    }
 
     /* Form Elements */
     input[type="text"], input[type="tel"] {
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       margin-bottom: 16px;
-      border-radius: 12px;
-      border: 1px solid #ddd;
-      background: #fff;
+      border-radius: 14px;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: rgba(255,255,255,0.9);
       font-size: 15px;
       box-sizing: border-box;
       outline: none;
-      transition: border 0.2s, box-shadow 0.2s;
+      transition: all 0.2s ease;
     }
     input[type="text"]:focus, input[type="tel"]:focus { 
-      border-color: #111; 
-      box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
     }
 
-    /* Fix for intl-tel-input width */
     .iti { width: 100%; margin-bottom: 16px; text-align: left; }
     .iti__input { width: 100% !important; margin-bottom: 0 !important; }
 
@@ -79,220 +130,226 @@
       align-items: flex-start;
       text-align: left;
       font-size: 12px;
-      color: #666;
+      color: var(--text-muted);
       margin-bottom: 24px;
-      line-height: 1.4;
+      line-height: 1.5;
     }
-    .consent-wrapper input { margin-right: 10px; margin-top: 2px; }
+    .consent-wrapper input { margin-right: 12px; margin-top: 3px; cursor: pointer; }
 
     .primary-btn {
       width: 100%;
       padding: 16px;
       border-radius: 14px;
-      background: #111;
+      background: var(--text-main);
       color: #fff;
       border: none;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.1s, background 0.2s;
+      transition: all 0.2s ease;
     }
-    .primary-btn:active { transform: scale(0.98); }
-    .primary-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .primary-btn:active { transform: scale(0.97); }
+    .primary-btn:disabled { background: var(--text-muted); cursor: not-allowed; }
 
-    #loading-state { display: none; margin-top: 20px; font-weight: 500; color: #111; }
-    #scan-warning { color: #d93025; font-size: 13px; display: none; margin-bottom: 16px; font-weight: 500; }
-    #phone-error { color: #d93025; font-size: 12px; display: none; margin-top: -10px; margin-bottom: 16px; text-align: left; font-weight: 500; }
+    /* Status & Alerts */
+    #status-container {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+    }
+    
+    .status-text { 
+      font-weight: 600; 
+      font-size: 15px;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    
+    .status-subtext {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      display: none;
+      text-align: left;
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .alert-danger { background: rgba(255, 59, 48, 0.1); color: var(--danger); border: 1px solid rgba(255, 59, 48, 0.2); }
+    .alert-warning { background: rgba(255, 149, 0, 0.1); color: #d97706; border: 1px solid rgba(255, 149, 0, 0.2); }
   </style>
 </head>
 <body>
 
   <div class="scan-container">
-    <h2>Skin Analysis</h2>
-    <p>Center your face in the frame with good lighting. Remove any glasses or masks.</p>
+    <h2>Diagnostic Scan</h2>
+    <p>Center your face in good lighting. Please remove glasses or masks for accurate analysis.</p>
 
     <div class="video-wrapper">
       <video id="camera-stream" autoplay playsinline></video>
       <canvas id="capture-canvas"></canvas>
+      <div id="scanner-laser" class="scanner-laser"></div>
     </div>
 
-    <div id="scan-warning">⚠️ Please ensure your face is clearly visible, well-lit, and remove any glasses or masks.</div>
+    <!-- Dynamic Alerts -->
+    <div id="scan-alert" class="alert alert-danger"></div>
 
     <form id="scan-form">
-      <input type="text" id="scan-name" placeholder="Full Name" required>
+      <input type="text" id="scan-name" placeholder="Full Name" required autocomplete="name">
       
-      <!-- Phone Input with Intl-Tel-Input -->
       <input type="tel" id="scan-phone" required>
-      <div id="phone-error">Please enter a valid phone number.</div>
       
       <div class="consent-wrapper">
         <input type="checkbox" id="scan-consent" required>
         <label for="scan-consent">I consent to Glowvai analyzing my facial features to generate a customized diagnostic skin report.</label>
       </div>
 
-      <button type="submit" id="scan-btn" class="primary-btn">Analyze My Skin</button>
+      <button type="submit" id="scan-btn" class="primary-btn">Start Analysis</button>
     </form>
 
-    <div id="loading-state">Connecting to Glowvai Cloud AI...</div>
+    <!-- Interactive Loading State -->
+    <div id="status-container">
+      <div id="status-text" class="status-text">Uploading secure image...</div>
+      <div id="status-subtext" class="status-subtext">Initializing cloud connection</div>
+    </div>
   </div>
 
-  <!-- JS for International Phone Input -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 
   <script>
+    // Elements
     const video = document.getElementById('camera-stream');
     const canvas = document.getElementById('capture-canvas');
+    const laser = document.getElementById('scanner-laser');
     const scanForm = document.getElementById('scan-form');
-    const scanBtn = document.getElementById('scan-btn');
-    const loadingState = document.getElementById('loading-state');
+    const statusContainer = document.getElementById('status-container');
+    const statusText = document.getElementById('status-text');
+    const statusSubtext = document.getElementById('status-subtext');
+    const scanAlert = document.getElementById('scan-alert');
     const phoneInput = document.getElementById('scan-phone');
-    const phoneError = document.getElementById('phone-error');
-    const scanWarning = document.getElementById('scan-warning');
     
-    // Endpoints
+    // API Endpoints
     const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmEqNgAk5cPP2n5kRNd83UrAhGThXwXFsk17bhtCG8HVl2ngQSROlxdJGUchEVwRVfBw/exec";
     const RENDER_API_URL = "https://glowvai-api-v2.onrender.com/analyze-skin";
 
-    // 1. Initialize International Phone Input
+    // 1. Initialize Phone Input
     const iti = window.intlTelInput(phoneInput, {
       initialCountry: "auto",
       geoIpLookup: function(success, failure) {
-        fetch("https://ipapi.co/json")
-          .then(function(res) { return res.json(); })
-          .then(function(data) { success(data.country_code); })
-          .catch(function() { success("in"); });
+        fetch("https://ipapi.co/json").then(res => res.json()).then(data => success(data.country_code)).catch(() => success("in"));
       },
       utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
     });
 
-    // 2. Initialize Camera
+    // 2. Start Camera
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         video.srcObject = stream;
+        video.style.display = 'block';
+        canvas.style.display = 'none';
+        laser.style.display = 'none';
       } catch (err) {
-        alert("Camera access is required for the analysis.");
-        console.error("Camera Error:", err);
+        showAlert("Camera access denied. Please enable permissions to scan.", "danger");
       }
     }
     startCamera();
 
-    // 3. Simple Client-Side Frame Quality & Anti-Random-Object Check
+    // 3. Display Alerts
+    function showAlert(message, type = "danger") {
+      scanAlert.className = `alert alert-${type}`;
+      scanAlert.innerHTML = `<strong>Attention:</strong> ${message}`;
+      scanAlert.style.display = 'block';
+    }
+    function hideAlert() { scanAlert.style.display = 'none'; }
+
+    // 4. Client-Side Integrity Check (Prevents random/blank photos)
     function validateImageQuality(context, width, height) {
       const imgData = context.getImageData(0, 0, width, height);
       const pixels = imgData.data;
-      let colorVariance = 0;
-      let totalBrightness = 0;
+      let brightness = 0, variance = 0, samples = 0;
       
-      // Sample pixels to verify it's not a completely black image, random wall, or blank noise
-      const sampleStep = 50;
-      let samples = 0;
-      for (let i = 0; i < pixels.length; i += (4 * sampleStep)) {
-        const r = pixels[i];
-        const g = pixels[i+1];
-        const b = pixels[i+2];
-        const brightness = (r + g + b) / 3;
-        totalBrightness += brightness;
-        colorVariance += Math.abs(r - g) + Math.abs(g - b);
+      for (let i = 0; i < pixels.length; i += (4 * 40)) { // Sample every 40th pixel
+        const r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+        brightness += (r + g + b) / 3;
+        variance += Math.abs(r - g) + Math.abs(g - b);
         samples++;
       }
       
-      const avgBrightness = totalBrightness / samples;
-      const avgVariance = colorVariance / samples;
+      const avgBrightness = brightness / samples;
+      const avgVariance = variance / samples;
 
-      // Fail if too dark (underlit) or completely flat color (random wall/object)
-      if (avgBrightness < 30) return "too_dark";
-      if (avgBrightness > 240) return "too_bright";
-      if (avgVariance < 8) return "invalid_surface"; // Likely a blank wall or random non-face object
+      if (avgBrightness < 35) return "Lighting is too dark. Please move to a brighter area.";
+      if (avgBrightness > 240) return "Lighting is too bright or washed out.";
+      if (avgVariance < 12) return "No clear face detected. Ensure your face is centered.";
       return "passed";
     }
 
-    // 4. Hybrid Location Fetcher
-    async function getIPLocationFallback() {
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        return `${data.city}, ${data.region} (IP Fallback)`; 
-      } catch (error) {
-        return "Location unavailable";
-      }
+    // 5. Update UI Status dynamically
+    function updateStatus(main, sub) {
+      statusText.innerText = main;
+      statusSubtext.innerText = sub;
     }
 
-    async function getHybridLocation() {
-      return new Promise((resolve) => {
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => { resolve(`${position.coords.latitude}, ${position.coords.longitude} (Exact GPS)`); },
-            async (error) => {
-              const ipFallback = await getIPLocationFallback();
-              resolve(ipFallback);
-            },
-            { timeout: 5000, enableHighAccuracy: true } 
-          );
-        } else {
-          getIPLocationFallback().then(resolve);
-        }
-      });
-    }
-
-    // 5. Handle Scan Submission
+    // 6. Form Submission & Processing Pipeline
     scanForm.addEventListener('submit', async function(e) {
       e.preventDefault();
-      scanWarning.style.display = "none";
+      hideAlert();
       
-      // Enforce strict phone validation
       if (!iti.isValidNumber()) {
-        phoneError.style.display = "block";
-        phoneInput.style.borderColor = "#d93025";
+        showAlert("Please enter a valid phone number.", "danger");
         return; 
       }
       
-      phoneError.style.display = "none";
-      phoneInput.style.borderColor = "#111";
-      
-      scanBtn.style.display = 'none';
+      // UI Transition to Scanning Mode
       scanForm.style.display = 'none';
-      loadingState.style.display = 'block';
+      statusContainer.style.display = 'block';
+      laser.style.display = 'block'; // Start laser animation
+      updateStatus("Processing image...", "Validating frame quality");
 
-      // Capture Image
+      // Capture frame
       canvas.width = video.videoWidth || 640;
       canvas.height = video.videoHeight || 480;
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      // Quality Check Validation
+      // Verify image isn't blank/dark
       const qualityCheck = validateImageQuality(context, canvas.width, canvas.height);
       if (qualityCheck !== "passed") {
-        loadingState.style.display = 'none';
+        // Reset UI on failure
+        statusContainer.style.display = 'none';
         scanForm.style.display = 'block';
-        scanBtn.style.display = 'block';
-        scanWarning.style.display = 'block';
-        if(qualityCheck === "too_dark") {
-          scanWarning.innerText = "⚠️ Lighting too dark. Please move to a well-lit area.";
-        } else {
-          scanWarning.innerText = "⚠️ Invalid scan target detected. Please center your actual face in the frame.";
-        }
+        laser.style.display = 'none';
+        showAlert(qualityCheck, "warning");
         return;
       }
 
+      // Freeze frame on canvas
       const base64Image = canvas.toDataURL('image/jpeg', 0.85);
-      
       video.style.display = 'none';
       canvas.style.display = 'block';
 
-      const location = await getHybridLocation();
-
       const payload = {
-        type: "web_scan",
         name: document.getElementById('scan-name').value,
         phone: iti.getNumber(),
-        location: location,
-        imageBase64: base64Image,
-        consent: document.getElementById('scan-consent').checked
+        imageBase64: base64Image
       };
 
       try {
-        // 1. Save data via Google Apps Script (Backup & Sheets logging)
+        // Step 1: Backup to Google Sheets (Fire and forget)
+        updateStatus("Securing data...", "Logging to secure database");
         fetch(APP_SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
@@ -300,9 +357,9 @@
           body: JSON.stringify(payload)
         });
 
-        loadingState.innerText = "Analyzing skin textures with Render Cloud AI...";
-
-        // 2. Direct call to Render Cloud Backend for real-time AI results
+        // Step 2: Send to Render AI Backend
+        updateStatus("Analyzing skin textures...", "AI is detecting facial features");
+        
         const aiResponse = await fetch(RENDER_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -310,31 +367,41 @@
         });
 
         if (!aiResponse.ok) {
-          throw new Error("Cloud analysis engine responded with an error.");
+          // Check if backend specifically rejected due to glasses/mask
+          const errorData = await aiResponse.json().catch(() => ({}));
+          if (errorData.detail && errorData.detail.includes("glasses")) {
+            throw new Error("Glasses detected. Please remove them and try again.");
+          }
+          throw new Error("Cloud analysis failed. Please ensure your face is clearly visible.");
         }
 
         const resultData = await aiResponse.json();
         
-        // Safely stop camera hardware
+        // Stop hardware camera
         if (video.srcObject) {
           video.srcObject.getTracks().forEach(track => track.stop());
         }
 
-        loadingState.innerText = "Analysis complete! Redirecting to your report...";
+        // Step 3: Success & Redirect
+        updateStatus("Analysis Complete!", "Redirecting to your diagnostic report...");
+        laser.style.display = 'none';
         
-        // Redirect to results page passing data/ID
+        // Pass the generated report ID to the results page
         setTimeout(() => {
-          window.location.href = `results.html?status=success&name=${encodeURIComponent(payload.name)}`;
-        }, 1000);
+          window.location.href = `results.html?id=${resultData.report_id || 'latest'}`;
+        }, 1200);
 
       } catch (err) {
-        console.error("Analysis Pipeline Error:", err);
-        loadingState.innerText = "Server warming up or network timeout. Retrying connection...";
+        console.error("Pipeline Error:", err);
         
-        // Fallback redirect if Render server was sleeping and took time to wake up
-        setTimeout(() => {
-          window.location.href = `results.html?status=saved&name=${encodeURIComponent(payload.name)}`;
-        }, 2000);
+        // Reset UI for retry
+        laser.style.display = 'none';
+        statusContainer.style.display = 'none';
+        scanForm.style.display = 'block';
+        canvas.style.display = 'none';
+        video.style.display = 'block';
+        
+        showAlert(err.message || "Network timeout. Ensure good internet and try again.", "danger");
       }
     });
   </script>
