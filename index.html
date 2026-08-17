@@ -435,6 +435,46 @@
         showAlert(err.message || "Network timeout. Ensure good internet and try again.", "danger");
       }
     });
+    // This function triggers when the user captures their photo
+async function sendToPythonCNN(imageBase64) {
+  try {
+    // 1. Point this to your LIVE Python server, NOT the dead local tunnel
+    const apiEndpoint = "https://api.glowvai.in/analyze-skin"; 
+    
+    console.log("Sending facial data to CNN...");
+    
+    // 2. Make the POST request to your backend
+    const response = await fetch(apiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ image: imageBase64 })
+    });
+
+    if (!response.ok) {
+      throw new Error("Python Backend is offline or unreachable.");
+    }
+
+    // 3. Receive the REAL AI data
+    const aiData = await response.json();
+    
+    // Extract the exact scores from your Python JSON output
+    // (Make sure these variable names match exactly what your Python script spits out)
+    const realOverallScore = aiData.overall_score; 
+    const realClarity = aiData.clarity;
+    const realHydration = aiData.hydration;
+    const realTexture = aiData.texture;
+
+    // 4. Redirect to the results page with the REAL data embedded in the URL
+    window.location.href = `results.html?score=${realOverallScore}&clarity=${realClarity}&hydration=${realHydration}&texture=${realTexture}`;
+    
+  } catch (error) {
+    console.error("CNN Connection Failed:", error);
+    // 5. Professional error handling so they don't see a broken page
+    alert("Our AI servers are currently processing a high volume of scans. Please try again in a moment.");
+  }
+}
   </script>
 </body>
 </html>
